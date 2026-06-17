@@ -368,6 +368,110 @@ textarea {
   color: var(--text-primary);
 }
 
+.pose-chips-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: var(--space-sm);
+  margin-top: var(--space-xs);
+}
+
+.pose-chip {
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid var(--border-glass);
+  border-radius: var(--radius-sm);
+  padding: 10px 14px;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: var(--transition-smooth);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  user-select: none;
+}
+
+.pose-chip:hover {
+  background: rgba(255, 255, 255, 0.04);
+  border-color: rgba(168, 85, 247, 0.3);
+  color: var(--text-primary);
+  transform: translateY(-1px);
+}
+
+.pose-chip.active {
+  background: rgba(168, 85, 247, 0.08);
+  border-color: var(--accent-purple);
+  color: var(--text-primary);
+  box-shadow: 0 4px 15px rgba(168, 85, 247, 0.15);
+}
+
+.pose-chip .checkmark {
+  width: 16px;
+  height: 16px;
+  border-radius: 4px;
+  border: 1px solid var(--text-muted);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: var(--transition-smooth);
+  flex-shrink: 0;
+}
+
+.pose-chip:hover .checkmark {
+  border-color: rgba(168, 85, 247, 0.5);
+}
+
+.pose-chip.active .checkmark {
+  background: var(--accent-purple);
+  border-color: var(--accent-purple);
+  color: white;
+}
+
+.pose-chip .checkmark svg {
+  opacity: 0;
+  transform: scale(0.5);
+  transition: var(--transition-smooth);
+}
+
+.pose-chip.active .checkmark svg {
+  opacity: 1;
+  transform: scale(1);
+}
+.pose-type-selector {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-md);
+  margin-top: var(--space-xs);
+}
+
+.pose-type-card {
+  border: 1px solid var(--border-glass);
+  background: rgba(255, 255, 255, 0.02);
+  border-radius: var(--radius-sm);
+  padding: 12px var(--space-md);
+  text-align: center;
+  cursor: pointer;
+  font-family: 'Outfit', sans-serif;
+  font-weight: 600;
+  font-size: 14px;
+  transition: var(--transition-smooth);
+  color: var(--text-secondary);
+  user-select: none;
+}
+
+.pose-type-card:hover {
+  background: rgba(255, 255, 255, 0.04);
+  border-color: rgba(168, 85, 247, 0.3);
+  color: var(--text-primary);
+}
+
+.pose-type-card.active {
+  background: rgba(168, 85, 247, 0.08);
+  border-color: var(--accent-purple);
+  color: var(--text-primary);
+  box-shadow: 0 4px 15px rgba(168, 85, 247, 0.15);
+}
+
 /* ===== BUTTONS ===== */
 .btn {
   font-family: 'Outfit', sans-serif;

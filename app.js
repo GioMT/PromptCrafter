@@ -1,15 +1,15 @@
 // Global Application State
 const appState = {
   activeTab: "panel-pose",
-  activePrompt: ""
+  activePrompt: "",
+  poseType: "A-pose"
 };
 
 // Google Flow Omni Ingredient Sequential Reference Definitions
 const GUIDES = {
   "panel-pose": [
-    { title: "Full Body Photo", ref: "input_file_0.png (Ingredient 1)" },
-    { title: "Half Body Photo", ref: "input_file_1.png (Ingredient 2)" },
-    { title: "Closeup Face Photo", ref: "input_file_2.png (Ingredient 3)" }
+    { title: "Whole Body Photo", ref: "input_file_0.png (Ingredient 1)" },
+    { title: "Closeup Face Photo", ref: "input_file_1.png (Ingredient 2)" }
   ],
   "panel-ugc": [
     { title: "Character Pose Sheet (from Step 1)", ref: "input_file_0.png (Ingredient 1)" },
@@ -38,11 +38,10 @@ const elements = {
   ugcTypeCards: document.querySelectorAll('.ugc-type-card'),
   groupSpokenScript: document.getElementById('group-spoken-script'),
   
-  // Input fields
-  poseCharDesc: document.getElementById('pose-char-desc'),
-  poseStyle: document.getElementById('pose-style'),
-  poseAttire: document.getElementById('pose-attire'),
-  posePositions: document.getElementById('pose-positions'),
+  poseCharAge: document.getElementById('pose-char-age'),
+  poseChipsContainer: document.getElementById('pose-chips-container'),
+  poseSignatureDetail: document.getElementById('pose-signature-detail'),
+  expressionChipsContainer: document.getElementById('expression-chips-container'),
   
   ugcProductDesc: document.getElementById('ugc-product-desc'),
   ugcBgDesc: document.getElementById('ugc-bg-desc'),
@@ -63,10 +62,115 @@ const elements = {
 document.addEventListener('DOMContentLoaded', () => {
   setupTabListeners();
   setupUgcTypeListeners();
+  setupPoseChipsListeners();
+  setupPoseTypeListeners();
   setupGenerateButtons();
   setupCopyButton();
+  updatePoseIngredientsGuide();
   renderIngredientGuide(appState.activeTab);
 });
+
+// =============================================
+// POSE CHIPS & TYPE LISTENERS
+// =============================================
+function setupPoseChipsListeners() {
+  // Listeners for Pose chips
+  if (elements.poseChipsContainer) {
+    elements.poseChipsContainer.addEventListener('click', (e) => {
+      const chip = e.target.closest('.pose-chip');
+      if (chip) {
+        chip.classList.toggle('active');
+        
+        // Show/hide Signature Action Details input group based on chip selection state
+        if (chip.getAttribute('data-pose') === 'Signature Action Pose') {
+          const group = document.getElementById('group-signature-action');
+          if (group) {
+            if (chip.classList.contains('active')) {
+              group.classList.remove('hidden');
+            } else {
+              group.classList.add('hidden');
+            }
+          }
+          // Dynamically update sequential ingredients guide
+          updatePoseIngredientsGuide();
+        }
+      }
+    });
+  }
+
+  // Listeners for Expression chips
+  if (elements.expressionChipsContainer) {
+    elements.expressionChipsContainer.addEventListener('click', (e) => {
+      const chip = e.target.closest('.pose-chip');
+      if (chip) {
+        chip.classList.toggle('active');
+      }
+    });
+  }
+}
+
+function setupPoseTypeListeners() {
+  const cards = document.querySelectorAll('.pose-type-card');
+  cards.forEach(card => {
+    card.addEventListener('click', () => {
+      cards.forEach(c => c.classList.remove('active'));
+      card.classList.add('active');
+      
+      const poseType = card.getAttribute('data-type'); // "A-pose" or "T-pose"
+      appState.poseType = poseType;
+      updatePoseChipsLabels(poseType);
+    });
+  });
+}
+
+function updatePoseChipsLabels(poseType) {
+  const mapping = {
+    "Front View (Whole Body)": `Front View in ${poseType} (Whole Body)`,
+    "Left Side Profile (Whole Body)": `Left Side Profile in ${poseType} (Whole Body)`,
+    "Right Side Profile (Whole Body)": `Right Side Profile in ${poseType} (Whole Body)`,
+    "Back View (Whole Body)": `Back View in ${poseType} (Whole Body)`
+  };
+  
+  const chips = elements.poseChipsContainer.querySelectorAll('.pose-chip');
+  chips.forEach(chip => {
+    const originalPose = chip.getAttribute('data-pose');
+    
+    // Normalize clean pose
+    let cleanPose = originalPose;
+    cleanPose = cleanPose.replace('in A-pose ', '').replace('in T-pose ', '');
+    
+    if (mapping[cleanPose]) {
+      const newLabel = mapping[cleanPose];
+      chip.setAttribute('data-pose', newLabel);
+      
+      const checkmark = chip.querySelector('.checkmark');
+      const spanMarkup = checkmark ? checkmark.outerHTML : '';
+      chip.innerHTML = `\n                ${spanMarkup}\n                ${newLabel}\n              `;
+    }
+  });
+}
+
+function updatePoseIngredientsGuide() {
+  const signatureChip = elements.poseChipsContainer.querySelector('[data-pose="Signature Action Pose"]');
+  const hasSignatureAction = signatureChip && signatureChip.classList.contains('active');
+  
+  if (hasSignatureAction) {
+    GUIDES["panel-pose"] = [
+      { title: "Whole Body Photo", ref: "input_file_0.png (Ingredient 1)" },
+      { title: "Closeup Face Photo", ref: "input_file_1.png (Ingredient 2)" },
+      { title: "Signature Action Product/Prop", ref: "input_file_2.png (Ingredient 3)" }
+    ];
+  } else {
+    GUIDES["panel-pose"] = [
+      { title: "Whole Body Photo", ref: "input_file_0.png (Ingredient 1)" },
+      { title: "Closeup Face Photo", ref: "input_file_1.png (Ingredient 2)" }
+    ];
+  }
+  
+  if (appState.activeTab === "panel-pose") {
+    renderIngredientGuide("panel-pose");
+  }
+}
 
 // =============================================
 // TAB NAVIGATION
@@ -166,41 +270,77 @@ function setupGenerateButtons() {
   
   // Tab 1: Pose Sheet Prompt Generator
   elements.btnGeneratePose.addEventListener('click', () => {
-    const char = elements.poseCharDesc.value.trim();
-    const style = elements.poseStyle.value;
-    const attire = elements.poseAttire.value.trim();
-    const positions = elements.posePositions.value.trim();
+    const age = elements.poseCharAge.value.trim();
+    const selectedPoseChips = Array.from(elements.poseChipsContainer.querySelectorAll('.pose-chip.active'));
+    const selectedExpressionChips = Array.from(elements.expressionChipsContainer.querySelectorAll('.pose-chip.active'));
+    const signatureDetail = elements.poseSignatureDetail.value.trim();
     
-    if (!char || !attire || !positions) {
-      alert("Please fill in character demographics, apparel details, and desired poses.");
+    if (!age || (selectedPoseChips.length === 0 && selectedExpressionChips.length === 0)) {
+      alert("Please enter the character age and select at least one pose or expression.");
       return;
     }
-    
+
+    const signatureChip = elements.poseChipsContainer.querySelector('[data-pose="Signature Action Pose"]');
+    const hasSignatureAction = signatureChip && signatureChip.classList.contains('active');
+
+    // Build the list of poses
+    const poses = selectedPoseChips.map(chip => {
+      const poseName = chip.getAttribute('data-pose');
+      if (poseName === 'Signature Action Pose') {
+        return `Signature Action Pose (${signatureDetail || 'holding a product [input_file_2.png]'})`;
+      }
+      return poseName;
+    }).join(', ');
+
+    // Build the list of expression closeups
+    const expressionsList = selectedExpressionChips.map(chip => chip.getAttribute('data-expression')).join(', ');
+    const expressionsSection = expressionsList ? `a set of closeup headshots expressing: ${expressionsList}` : '';
+
+    // Join all views on the sheet
+    const allViews = [poses, expressionsSection].filter(Boolean).join(', ');
+
+    // Determine ingredients list based on signature action selection
+    let ingredientsRaw = `  - Whole Body Image: reference [input_file_0.png]
+  - Closeup Face Image: reference [input_file_1.png]`;
+    let ingredientsHtml = `  - Whole Body Image: reference <span class="highlight-image">[input_file_0.png]</span><br>
+  - Closeup Face Image: reference <span class="highlight-image">[input_file_1.png]</span>`;
+
+    if (hasSignatureAction) {
+      ingredientsRaw += `\n  - Signature Action Product/Prop Image: reference [input_file_2.png]`;
+      ingredientsHtml += `<br>\n  - Signature Action Product/Prop Image: reference <span class="highlight-image">[input_file_2.png]</span>`;
+    }
+
     const rawPrompt = `[CHARACTER MODEL INGREDIENTS:
-  - Full Body Image: reference [input_file_0.png]
-  - Half Body Image: reference [input_file_1.png]
-  - Closeup Face Image: reference [input_file_2.png]
+${ingredientsRaw}
 ]
 
 Google Flow Omni Pose Reference Sheet Directive:
 Generate a highly detailed, professional character pose reference sheet.
-Subject: A consistent model representing the demographics and features in [input_file_2.png] (described as: ${char}), wearing attire in [input_file_0.png] and [input_file_1.png] (described as: ${attire}).
-Layout: A single layout containing multiple poses in one clean grid: ${positions}.
-Aesthetic Style: ${style}.
+Subject: A consistent model representing the age of ${age}.
 
-Ensure identical facial features, clothing wrinkles, hair texture, body proportions, and expressions across all angles. Make a cohesive character reference matrix, bright studio lighting, neutral light gray background, clean borders separating views.`;
+Fidelity & Natural Realism Directives:
+1. Face Fidelity: The generated character sheet MUST strictly maintain and replicate the natural face structure, facial features, expressions, and details from the closeup reference photo [input_file_1.png]. Do not alter, average, or change the facial structure or details.
+2. Body Fidelity: The generated character sheet MUST strictly maintain and replicate the natural body structure, physical proportions, and anatomical details from the whole body reference photo [input_file_0.png].
+3. Realism: The character poses must look completely natural and realistic, ensuring organic skin textures, natural hair flow, and realistic lighting.
+4. Style Parameters: Clear silhouette, no shading, even lighting, sharp focus, and a clean neutral gray background.
+
+Layout: A single layout containing multiple poses in one clean grid: ${allViews}.
+
+Ensure identical facial features, hair volume, body proportions, and expressions across all angles. Make a cohesive character reference matrix, bright studio lighting, neutral light gray background, clean borders separating views.`;
 
     const htmlPrompt = `[CHARACTER MODEL INGREDIENTS:<br>
-  - Full Body Image: reference <span class="highlight-image">[input_file_0.png]</span><br>
-  - Half Body Image: reference <span class="highlight-image">[input_file_1.png]</span><br>
-  - Closeup Face Image: reference <span class="highlight-image">[input_file_2.png]</span><br>
+${ingredientsHtml}<br>
 ]<br><br>
 <strong>Google Flow Omni Pose Reference Sheet Directive:</strong><br>
 Generate a highly detailed, professional character pose reference sheet.<br>
-Subject: A consistent model representing the demographics and features in <span class="highlight-image">[input_file_2.png]</span> (described as: <span class="highlight-tag">${char}</span>), wearing attire in <span class="highlight-image">[input_file_0.png]</span> and <span class="highlight-image">[input_file_1.png]</span> (described as: <span class="highlight-tag">${attire}</span>).<br>
-Layout: A single layout containing multiple poses in one clean grid: <span class="highlight-tag">${positions}</span>.<br>
-Aesthetic Style: <span class="highlight-tag">${style}</span>.<br><br>
-Ensure identical facial features, clothing wrinkles, hair texture, body proportions, and expressions across all angles. Make a cohesive character reference matrix, bright studio lighting, neutral light gray background, clean borders separating views.`;
+Subject: A consistent model representing the age of <span class="highlight-tag">${age}</span>.<br><br>
+<strong>Fidelity & Natural Realism Directives:</strong><br>
+1. <strong>Face Fidelity:</strong> The generated character sheet MUST strictly maintain and replicate the natural face structure, facial features, expressions, and details from the closeup reference photo <span class="highlight-image">[input_file_1.png]</span>. Do not alter, average, or change the facial structure or details.<br>
+2. <strong>Body Fidelity:</strong> The generated character sheet MUST strictly maintain and replicate the natural body structure, physical proportions, and anatomical details from the whole body reference photo <span class="highlight-image">[input_file_0.png]</span>.<br>
+3. <strong>Realism:</strong> The character poses must look completely natural and realistic, ensuring organic skin textures, natural hair flow, and realistic lighting.<br>
+4. <strong>Style Parameters:</strong> Clear silhouette, no shading, even lighting, sharp focus, and a clean neutral gray background.<br><br>
+Layout: A single layout containing multiple poses in one clean grid: <span class="highlight-tag">${allViews}</span>.<br><br>
+Ensure identical facial features, hair volume, body proportions, and expressions across all angles. Make a cohesive character reference matrix, bright studio lighting, neutral light gray background, clean borders separating views.`;
 
     renderPrompt(rawPrompt, htmlPrompt);
   });
