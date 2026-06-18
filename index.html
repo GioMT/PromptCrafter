@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>PromptCraft OMNI — TikTok UGC AI Video Prompt Builder</title>
+  <title>Pramft OMNI — TikTok UGC AI Video Prompt Builder</title>
   <meta name="description" content="Configure and generate detailed prompts for Google Flow Omni AI video generation, featuring character pose sheets, product showcase videos, and multi-scene continuations.">
   <link rel="stylesheet" href="index.css">
 </head>
@@ -15,7 +15,7 @@
     <header>
       <div class="logo-section">
         <h1>
-          PromptCraft OMNI 
+          Pramft OMNI 
           <span class="badge-omni">Google Flow</span>
         </h1>
         <p>TikTok AI User Generated Content (UGC) Prompt Generator</p>
@@ -62,7 +62,7 @@
           </div>
           <div class="form-group">
             <label>Base Pose Type</label>
-            <div class="pose-type-selector">
+            <div class="pose-type-selector" id="pose-base-type-selector">
               <div class="pose-type-card active" data-type="A-pose">
                 A-Pose (Relaxed Arms Down)
               </div>
@@ -206,7 +206,7 @@
           
           <div class="form-group" id="group-signature-action">
             <label for="pose-signature-detail">Signature Action Details <span class="optional">(Active when Signature Action Pose is selected)</span></label>
-            <input type="text" id="pose-signature-detail" placeholder="e.g., holding a product [input_file_2.png]" value="holding a product [input_file_2.png]">
+            <input type="text" id="pose-signature-detail" placeholder="e.g., holding a product @input_file_2.png" value="holding a product @input_file_2.png">
           </div>
           
           <button class="btn btn-primary" id="btn-generate-pose">
@@ -227,40 +227,76 @@
             UGC Content Strategy
           </div>
 
-          <div class="ugc-type-selector">
-            <div class="ugc-type-card active" id="ugc-card-modeling">
-              <input type="radio" name="ugc-type" id="ugc-type-modeling" value="modeling" checked>
+          <div class="ugc-type-selector" id="ugc-content-strategy-selector">
+            <div class="ugc-type-card" data-type="modeling">
               <span class="ugc-type-title">Modeling & Posing</span>
               <span class="ugc-type-desc">Character wears products, walks, pivots, or models without speaking. Focuses on clothing and attire aesthetics.</span>
             </div>
-            <div class="ugc-type-card" id="ugc-card-explainer">
-              <input type="radio" name="ugc-type" id="ugc-type-explainer" value="explainer">
+            <div class="ugc-type-card" data-type="explainer">
               <span class="ugc-type-title">Product Showcase / Explainer</span>
               <span class="ugc-type-desc">Character holds the product, demonstrates it, and speaks/narrates a product review script.</span>
             </div>
           </div>
 
-          <div class="form-group">
-            <label for="ugc-product-desc">Product Details</label>
-            <input type="text" id="ugc-product-desc" placeholder="e.g., luxury oatmeal & eucalyptus bar soap with aesthetic wrapping" value="luxury organic oatmeal and eucalyptus bar soap, wrapped in paper with a botanical seal">
-            <div class="preset-container">
-              <span class="preset-chip" onclick="setPreset('ugc-product-desc', 'luxury organic oatmeal and eucalyptus bar soap, wrapped in paper with a botanical seal')">Eucalyptus Soap</span>
-              <span class="preset-chip" onclick="setPreset('ugc-product-desc', 'amber glass bottle dropper with minimalist cosmetic label')">Face Serum Bottle</span>
-              <span class="preset-chip" onclick="setPreset('ugc-product-desc', 'aesthetic oversized chunky knit beige cardigan')">Beige Cardigan</span>
+          <!-- CAMERA & FRAMING SECTION (ONLY FOR MODELING STRATEGY) -->
+          <div id="ugc-camera-section" class="hidden">
+            <div class="panel-section-title" style="margin-top: var(--space-md);">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+              Camera & Framing Settings
+            </div>
+
+            <div class="form-group">
+              <label>Subject Camera Distance</label>
+              <div class="pose-type-selector" id="ugc-distance-selector">
+                <div class="pose-type-card active" data-distance="medium">
+                  Standard Medium Shot
+                </div>
+                 <div class="pose-type-card" data-distance="far">
+                  5 Meters Away (Full Body + Prop)
+                </div>
+              </div>
             </div>
           </div>
 
-          <div class="form-group">
-            <label for="ugc-bg-desc">Background & Environment</label>
-            <input type="text" id="ugc-bg-desc" placeholder="e.g., bright aesthetic bathroom with green plants and soft natural window light" value="bright minimalist bathroom with light marble counters, green eucalyptus branches, and soft morning window light">
-            <div class="preset-container">
-              <span class="preset-chip" onclick="setPreset('ugc-bg-desc', 'bright minimalist bathroom with light marble counters, green eucalyptus branches, and soft morning window light')">Minimalist Bathroom</span>
-              <span class="preset-chip" onclick="setPreset('ugc-bg-desc', 'warm cozy modern bedroom, sunbeams, soft neutral linens, house plants')">Cozy Bedroom</span>
-              <span class="preset-chip" onclick="setPreset('ugc-bg-desc', 'aesthetic modern living room, concrete walls, beige linen couch')">Modern Living Room</span>
+          <!-- MODELING ACTION STRATEGY (ONLY FOR MODELING STRATEGY) -->
+          <div class="form-group hidden" id="ugc-modeling-strategy-section">
+            <label>Modeling Action Strategy</label>
+            <div class="pose-type-selector" id="ugc-strategy-selector">
+              <div class="pose-type-card" data-strategy="walking-pad" style="text-align: left; display: flex; flex-direction: column; justify-content: center;">
+                <span class="strategy-title" style="font-weight: 600; display: block; margin-bottom: 4px; font-size: 14px;">Walking Pad Strategy</span>
+                <span class="strategy-desc" style="font-size: 11px; color: var(--text-muted); font-weight: 400; line-height: 1.4; display: block;">Subject walks on a walking pad smiling at the camera. Permanent steady shot, no transitions or angles.</span>
+              </div>
+              <div class="pose-type-card" data-strategy="walk-away-in" style="text-align: left; display: flex; flex-direction: column; justify-content: center;">
+                <span class="strategy-title" style="font-weight: 600; display: block; margin-bottom: 4px; font-size: 14px;">Walk-Away / Walk-In Strategy</span>
+                <span class="strategy-desc" style="font-size: 11px; color: var(--text-muted); font-weight: 400; line-height: 1.4; display: block;">Subject starts close, walks away to pose, and walks back toward the camera to stop recording.</span>
+              </div>
             </div>
           </div>
 
-          <div class="form-group">
+          <!-- EXPLAINER-ONLY FIELDS (Product & Background text descriptions) -->
+          <div id="ugc-explainer-fields" class="hidden">
+            <div class="form-group">
+              <label for="ugc-product-desc">Product Details</label>
+              <input type="text" id="ugc-product-desc" placeholder="e.g., luxury oatmeal & eucalyptus bar soap with aesthetic wrapping" value="luxury organic oatmeal and eucalyptus bar soap, wrapped in paper with a botanical seal">
+              <div class="preset-container">
+                <span class="preset-chip" onclick="setPreset('ugc-product-desc', 'luxury organic oatmeal and eucalyptus bar soap, wrapped in paper with a botanical seal')">Eucalyptus Soap</span>
+                <span class="preset-chip" onclick="setPreset('ugc-product-desc', 'amber glass bottle dropper with minimalist cosmetic label')">Face Serum Bottle</span>
+                <span class="preset-chip" onclick="setPreset('ugc-product-desc', 'aesthetic oversized chunky knit beige cardigan')">Beige Cardigan</span>
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label for="ugc-bg-desc">Background & Environment</label>
+              <input type="text" id="ugc-bg-desc" placeholder="e.g., bright aesthetic bathroom with green plants and soft natural window light" value="bright minimalist bathroom with light marble counters, green eucalyptus branches, and soft morning window light">
+              <div class="preset-container">
+                <span class="preset-chip" onclick="setPreset('ugc-bg-desc', 'bright minimalist bathroom with light marble counters, green eucalyptus branches, and soft morning window light')">Minimalist Bathroom</span>
+                <span class="preset-chip" onclick="setPreset('ugc-bg-desc', 'warm cozy modern bedroom, sunbeams, soft neutral linens, house plants')">Cozy Bedroom</span>
+                <span class="preset-chip" onclick="setPreset('ugc-bg-desc', 'aesthetic modern living room, concrete walls, beige linen couch')">Modern Living Room</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="form-group hidden" id="ugc-action-group">
             <label for="ugc-action">Action / Movement Details <span class="optional">(What happens in these 10s)</span></label>
             <textarea id="ugc-action" placeholder="Describe the physical movement, pacing, and interaction with the product...">The model stands in front of the marble counter, gently smiling at the camera. She is holding the luxury organic bar soap, turning it around in her hands to showcase the packaging details and texture, then brings it close to her face to take a gentle breath of its aroma.</textarea>
           </div>
@@ -271,6 +307,26 @@
             <div class="flow-explainer-box">
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
               <span>Google Flow Omni uses voice synthesis or text-to-speech alignment. Your prompt will output script blocks formatted as <code>[SPOKEN SCRIPT: "..."]</code> for direct synchronization.</span>
+            </div>
+          </div>
+
+          <!-- ENVIRONMENT DYNAMICS SECTION (COMMON) -->
+          <div id="ugc-environment-section">
+            <div class="panel-section-title" style="margin-top: var(--space-md);">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
+              Environment Dynamics
+            </div>
+
+            <div class="form-group">
+              <label>Ambient Background Motion</label>
+              <div class="pose-type-selector" id="ugc-env-motion-selector">
+                <div class="pose-type-card active" data-motion="adaptive">
+                  Natural & Adaptive Motion
+                </div>
+                <div class="pose-type-card" data-motion="static">
+                  Static/Frozen Background
+                </div>
+              </div>
             </div>
           </div>
 
@@ -350,12 +406,43 @@
           <div class="reference-list" id="guide-list-container">
             <!-- Dynamically populated based on active tab -->
           </div>
+          
+          <div class="instruction-box" style="margin-top: var(--space-md); padding-top: var(--space-md); border-top: 1px solid var(--border-glass);">
+            <p style="font-size: 13px; color: var(--text-secondary); line-height: 1.5; display: flex; align-items: start; gap: 8px;">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--accent-purple)" stroke-width="2" style="flex-shrink: 0; margin-top: 2px;"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+              <span>
+                <strong>Tip:</strong> In the Google Flow interface, type <strong>@</strong> to reference your uploaded ingredients. 
+                <a href="#" class="ref-link" id="btn-show-ref-img" style="color: var(--accent-pink); text-decoration: none; font-weight: 600; display: inline-flex; align-items: center; gap: 2px;">
+                  View Reference UI
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+                </a>
+              </span>
+            </p>
+          </div>
         </section>
 
       </aside>
 
     </div>
 
+  </div>
+
+  <!-- MODAL FOR FLOW REFERENCE -->
+  <div class="modal-overlay hidden" id="ref-modal" role="dialog" aria-modal="true" aria-labelledby="modal-title">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h3 id="modal-title">Google Flow @ Reference Guide</h3>
+        <button class="modal-close" id="btn-close-modal" aria-label="Close Reference Guide">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </button>
+      </div>
+      <div class="modal-body">
+        <p style="margin-bottom: var(--space-xs); font-size: 14px; color: var(--text-secondary); line-height: 1.5;">
+          When building your prompt inside Google Flow Omni, typing the <strong>@</strong> key triggers an autocompletion list of your uploaded ingredients. Selecting an ingredient formats it cleanly as a reference pill (e.g. <code>CloseUp.jpeg</code>).
+        </p>
+        <img src="google_flow_ref.png" alt="Google Flow Autocomplete referencing @ autocomplete UI demo" class="modal-img">
+      </div>
+    </div>
   </div>
 
   <!-- TOAST NOTIFICATION -->
